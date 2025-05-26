@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BidiMenu - Artırılmış Gerçeklik Menüleri</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Flash Messages */
+        .flash-messages {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 1001;
+            max-width: 400px;
+        }
+
+        .flash-message {
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            animation: slideIn 0.5s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .flash-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        .flash-error {
+            background: linear-gradient(45deg, #dc3545, #fd7e14);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #ff6b6b;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #333;
+            position: relative;
+            overflow: hidden;
+            background: white;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: transparent;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            color: #666;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+        }
+
+        /* Floating AR Elements */
+        .ar-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .ar-icon {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            animation: float 6s ease-in-out infinite;
+            backdrop-filter: blur(10px);
+            color: #333;
+        }
+
+        .ar-icon:nth-child(1) { 
+            top: 15%; 
+            right: 10%; 
+            animation-delay: 0s; 
+        }
+        .ar-icon:nth-child(2) { 
+            top: 30%; 
+            left: 8%; 
+            animation-delay: 2s; 
+        }
+        .ar-icon:nth-child(3) { 
+            bottom: 20%; 
+            right: 15%; 
+            animation-delay: 4s; 
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .step {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Demo Section */
+        .demo {
+            padding: 100px 0;
+            background: white;
+            text-align: center;
+        }
+
+        .demo-video {
+            max-width: 800px;
+            margin: 3rem auto;
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .video-container {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .video-placeholder:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 100px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .pricing-card.popular {
+            border: 2px solid #ff6b6b;
+            transform: scale(1.05);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .currency {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .amount {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .period {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .pricing-features {
+            margin-bottom: 2rem;
+        }
+
+        .feature-highlight {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-count {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features-list li {
+            padding: 0.5rem 0;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .pricing-btn {
+            width: 100%;
+            padding: 15px;
+            background: #cccccc;
+            color: #666;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: not-allowed;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-note {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 1.5rem;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 15px;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .pricing-note p {
+            margin: 0;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 100px 0;
+            background: #ffffff !important;
+            color: #333;
+        }
+
+        .contact-form {
+            max-width: 600px;
+            margin: 3rem auto;
+            background: #f8f9fa;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+            font-size: 1rem;
+            color: #333;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            background: #f8f9fa;
+            color: #333;
+            text-align: center;
+            padding: 3rem 0;
+            border-top: 1px solid #e9ecef;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .steps {
+                grid-template-columns: 1fr;
+            }
+
+            .flash-messages {
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">BidiMenu</div>
+            <ul class="nav-links">
+                <li><a href="#anasayfa">Ana Sayfa</a></li>
+                <li><a href="#ozellikler">Özellikler</a></li>
+                <li><a href="#nasil-calisir">Nasıl Çalışır</a></li>
+                <li><a href="#paketler">Paketler</a></li>
+                <li><a href="#iletisim">İletişim</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="anasayfa" class="hero">
+        <div class="ar-elements">
+            <div class="ar-icon">🍕</div>
+            <div class="ar-icon">🥘</div>
+            <div class="ar-icon">🧋</div>
+        </div>
+        <div class="hero-content">
+            <h1>Menünüzü İnteraktif Bir Yemek Deneyimine Dönüştürün</h1>
+            <p>Yemeklerinizin etkileyici 3D görselleştirmeleriyle müşterilerinizin güvenle sipariş vermesine yardımcı olun. İadeleri azaltın, memnuniyeti artırın ve ortalama sipariş değerinizi %20 yükseltin.</p>
+            <a href="#iletisim" class="cta-button">Ücretsiz Demo İsteyin</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="ozellikler" class="features">
+        <div class="container">
+            <h2 class="section-title">Neden BidiMenu?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Kolay Kullanım</h3>
+                    <p>Sadece telefon kameranızla QR kodu tarayın ve yemekleri 3D olarak görün. Herhangi bir uygulama indirmeye gerek yok!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Gerçekçi Görünüm</h3>
+                    <p>Yemeklerin gerçek boyutlarını ve görünümünü AR teknolojisi ile masanızda görebilirsiniz.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Hızlı Karar</h3>
+                    <p>Yemekleri görerek daha hızlı ve güvenli seçimler yapın. Beklenmedik sürprizlere son!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Anlık Güncelleme</h3>
+                    <p>Menü değişiklikleri anında tüm müşterilere yansır. Basılı menü maliyetlerine elveda!</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Detaylı Analiz</h3>
+                    <p>Hangi yemeklerin daha çok ilgi gördüğünü takip edin ve menünüzü optimize edin.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>Çok Dilli Destek</h3>
+                    <p>Menünüz otomatik olarak müşterinin diline çevrilir. Uluslararası müşteriler için ideal!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="nasil-calisir" class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">Nasıl Çalışır?</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>QR Kodu Tarayın</h3>
+                    <p>Masanızdaki QR kodu telefon kameranızla tarayın</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>AR Menüyü Açın</h3>
+                    <p>Tarayıcınızda otomatik olarak AR menü açılır</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Yemekleri Keşfedin</h3>
+                    <p>Yemekleri 3D AR modelleriyle masanızda görün</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Siparişinizi Verin</h3>
+                    <p>Beğendiğiniz yemeği seçin ve siparişinizi tamamlayın</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo">
+        <div class="container">
+            <h2 class="section-title">Canlı Demo</h2>
+            <p>BidiMenu'nün nasıl çalıştığını görün ve kendiniz test edin</p>
+            <div class="demo-video">
+                <!-- Gerçek Video - Aktif -->
+                <div class="video-container">
+                    <video controls poster="static/video-thumbnail.jpg">
+                        <source src="static/bidimenu-demo.mp4" type="video/mp4">
+                        <source src="static/bidimenu-demo.webm" type="video/webm">
+                        Tarayıcınız video oynatmayı desteklemiyor.
+                    </video>
+                </div>
+                
+                <h3>AR Menü Deneyimi</h3>
+                <p>Bu videoda gerçek bir restoran ortamında BidiMenu'nün nasıl kullanıldığını görebilirsiniz. Müşteriler QR kodu tarayarak yemekleri masalarında 3D olarak görüyor.</p>
+                <a href="#iletisim" class="cta-button" style="margin-top: 2rem; display: inline-block;">Ücretsiz Demo Talep Et</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="paketler" class="pricing">
+        <div class="container">
+            <h2 class="section-title">Ücretlendirme Paketleri</h2>
+            <p style="text-align: center; font-size: 1.2rem; margin-bottom: 3rem; color: #666;">İşletmenizin büyüklüğüne uygun paketi seçin ve hemen başlayın</p>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Başlangıç</h3>
+                        <div class="price">
+                            <span class="currency">₺</span>
+                            <span class="amount">25.000</span>
+                            <span class="period">/yıl</span>
+                        </div>
+                    </div>
+                    <div class="pricing-features">
+                        <div class="feature-highlight">
+                            <span class="product-count">10</span>
+                            <span>Ürün AR Dönüşümü</span>
+                        </div>
+                        <ul class="features-list">
+                            <li>✓ 3D Modelleme ve AR Entegrasyonu</li>
+                            <li>✓ QR Kod Menü Sistemi</li>
+                            <li>✓ Temel Analitik Raporları</li>
+                            <li>✓ E-posta Desteği</li>
+                            <li>✓ Mobil Uyumlu Tasarım</li>
+                        </ul>
+                    </div>
+                    <button class="pricing-btn" disabled>Başlangıç Paketi (Yakında)</button>
+                </div>
+
+                <div class="pricing-card popular">
+                    <div class="popular-badge">En Popüler</div>
+                    <div class="pricing-header">
+                        <h3>Profesyonel</h3>
+                        <div class="price">
+                            <span class="currency">₺</span>
+                            <span class="amount">40.000</span>
+                            <span class="period">/yıl</span>
+                        </div>
+                    </div>
+                    <div class="pricing-features">
+                        <div class="feature-highlight">
+                            <span class="product-count">20</span>
+                            <span>Ürün AR Dönüşümü</span>
+                        </div>
+                        <ul class="features-list">
+                            <li>✓ 3D Modelleme ve AR Entegrasyonu</li>
+                            <li>✓ QR Kod Menü Sistemi</li>
+                            <li>✓ Gelişmiş Analitik Raporları</li>
+                            <li>✓ Öncelikli Destek</li>
+                            <li>✓ Çoklu Dil Desteği</li>
+                            <li>✓ Özel Tasarım Seçenekleri</li>
+                        </ul>
+                    </div>
+                    <button class="pricing-btn" disabled>Profesyonel Paketi (Yakında)</button>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Kurumsal</h3>
+                        <div class="price">
+                            <span class="currency">₺</span>
+                            <span class="amount">50.000</span>
+                            <span class="period">/yıl</span>
+                        </div>
+                    </div>
+                    <div class="pricing-features">
+                        <div class="feature-highlight">
+                            <span class="product-count">30</span>
+                            <span>Ürün AR Dönüşümü</span>
+                        </div>
+                        <ul class="features-list">
+                            <li>✓ 3D Modelleme ve AR Entegrasyonu</li>
+                            <li>✓ QR Kod Menü Sistemi</li>
+                            <li>✓ Kapsamlı Analitik Dashboard</li>
+                            <li>✓ 7/24 Telefon Desteği</li>
+                            <li>✓ API Entegrasyonu</li>
+                            <li>✓ Özel Marka Tasarımı</li>
+                            <li>✓ Eğitim ve Kurulum</li>
+                        </ul>
+                    </div>
+                    <button class="pricing-btn" disabled>Kurumsal Paketi (Yakında)</button>
+                </div>
+            </div>
+            <div class="pricing-note">
+                <p>🎯 <strong>%20 Sipariş Artışı Garantisi:</strong> İlk 6 ay içinde sipariş artışı görmezseniz, paket bedelinizi iade ediyoruz!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="iletisim" class="contact">
+        <div class="container">
+            <h2 class="section-title" style="color: #333;">İletişime Geçin</h2>
+            <p style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem; color: #666;">Restoranınız için BidiMenu çözümü hakkında bilgi alın</p>
+            <form class="contact-form" method="POST" action="{{ url_for('iletisim') }}">
+                <div class="form-group">
+                    <label for="name">Ad Soyad *</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">E-posta *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="restaurant">Restoran Adı</label>
+                    <input type="text" id="restaurant" name="restaurant">
+                </div>
+                <div class="form-group">
+                    <label for="message">Mesajınız *</label>
+                    <textarea id="message" name="message" placeholder="BidiMenu hakkında öğrenmek istediğiniz detayları yazabilirsiniz..." required></textarea>
+                </div>
+                <button type="submit" class="submit-btn">Bilgi Talep Et</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 BidiMenu. Tüm hakları saklıdır.</p>
+            <p>Artırılmış gerçeklikle restoran deneyimini dönüştürüyoruz.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(function() {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(function(message) {
+                message.style.animation = 'slideOut 0.5s ease-out forwards';
+                setTimeout(function() {
+                    message.remove();
+                }, 500);
+            });
+        }, 5000);
+
+        // Add slideOut animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Form validation
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const message = document.getElementById('message').value.trim();
+            
+            if (!name || !email || !message) {
+                e.preventDefault();
+                alert('Lütfen zorunlu alanları doldurun (Ad Soyad, E-posta, Mesaj)');
+                return false;
+            }
+            
+            // Email format check
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                e.preventDefault();
+                alert('Lütfen geçerli bir e-posta adresi girin');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('.submit-btn');
+            submitBtn.textContent = 'Gönderiliyor...';
+            submitBtn.disabled = true;
+        });
+
+        // Floating animation for AR icons
+        const arIcons = document.querySelectorAll('.ar-icon');
+        arIcons.forEach((icon, index) => {
+            icon.style.animationDelay = `${index * 2}s`;
+        });
+
+        // Feature cards hover effect
+        const featureCards = document.querySelectorAll('.feature-card');
+        featureCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Demo video placeholder interaction
+        function showVideoInfo() {
+            const placeholder = document.querySelector('.video-placeholder');
+            
+            // Visual feedback
+            placeholder.innerHTML = '🎬';
+            placeholder.style.background = 'linear-gradient(45deg, #ff6b6b, #4ecdc4)';
+            
+            setTimeout(() => {
+                alert('Demo videomuz yakında yüklenecek! Şimdilik aşağıdaki formu kullanarak ücretsiz demo talebinde bulunabilirsiniz.');
+                
+                // Scroll to contact form
+                document.querySelector('#iletisim').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }, 500);
+        }
+
+        // Keep the old function for backward compatibility
+        document.querySelector('.video-placeholder').addEventListener('click', function() {
+            showVideoInfo();
+        });
+
+        console.log('🚀 BidiMenu Website Loaded Successfully!');
+    </script>
+</body>
+</html>
