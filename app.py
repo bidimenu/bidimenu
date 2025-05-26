@@ -69,10 +69,6 @@ def iletisim():
         return redirect(url_for('index') + '#iletisim')
 
 if __name__ == '__main__':
-    print("🚀 BidiMenu Flask Uygulaması Başlatılıyor...")
-    print("📱 Uygulama çalışırken: http://localhost:5000")
-    print("📧 İletişim mesajları konsola ve logs/iletisim_mesajlari.txt dosyasına kaydedilecek")
-    print("-" * 60)
-    
-    # Debug mode - geliştirme için
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') == 'development'
+    app.run(debug=debug, host='0.0.0.0', port=port)
